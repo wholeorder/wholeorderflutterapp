@@ -180,7 +180,7 @@ class _UploadPhotoState extends State<UploadPhoto> {
                   ElevatedButton(
                     onPressed: logoEntreprise !=null && photoProfle !=null ? () {} : null,
                     style: ElevatedButton.styleFrom(
-                      onSurface:  Colors.white,
+                     // onSurface:  Colors.white,
                       backgroundColor: Colors.white,
                       side: BorderSide(
                         color: AppColors.myColor
@@ -203,7 +203,7 @@ class _UploadPhotoState extends State<UploadPhoto> {
                   ElevatedButton(
                     onPressed: logoEntreprise != null && photoProfle != null ? () {} : null,
                     style: ElevatedButton.styleFrom(
-                      onSurface: AppColors.myColor,
+                      //onSurface: AppColors.myColor,
                       backgroundColor: AppColors.myColor,
                     ),
                     child: Container(

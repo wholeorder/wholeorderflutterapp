@@ -1,20 +1,20 @@
 class VerifyOtpRequest {
   final String email;
-  final String password;
+  final String otp;
 
-  VerifyOtpRequest({required this.email, required this.password});
+  VerifyOtpRequest({required this.email, required this.otp});
 
   factory VerifyOtpRequest.fromJson(Map<String, dynamic> json) {
     return VerifyOtpRequest(
       email: json['email'],
-      password: json['password'],
+      otp: json['otp'],
     );
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['email'] = this.email;
-    data['password'] = this.password;
+    data['otp'] = this.otp;
     return data;
   }
 }

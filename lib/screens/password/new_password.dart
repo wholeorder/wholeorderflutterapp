@@ -221,7 +221,7 @@ class _NewPasswordState extends State<NewPassword> {
             ElevatedButton(
               onPressed: isactive ? () {} : null,
               style: ElevatedButton.styleFrom(
-                onSurface: AppColors.myColor,
+                //onSurface: AppColors.myColor,
                 backgroundColor: AppColors.myColor,
               ),
               child: Container(

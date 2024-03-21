@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:wholeorderclient/global/colors.dart';
+import 'package:wholeorderclient/methods/common_methods.dart';
+import 'package:wholeorderclient/models/requests/login_request.dart';
+import 'package:wholeorderclient/providers/auth_provider.dart';
+import 'package:wholeorderclient/screens/register/register.dart';
 import 'package:wholeorderclient/utils/title.dart';
 
 class Login extends StatefulWidget {
@@ -14,7 +19,7 @@ class _LoginState extends State<Login> {
   late TextEditingController passwordController;
   bool isactive = false;
   bool isPasswordVisible = false;
-
+  final CommonMethods commonMethods = CommonMethods();
 
   @override
   void initState() {
@@ -33,7 +38,8 @@ class _LoginState extends State<Login> {
   }
 
   void updateActiveState() {
-    final isActive = emailController.text.isNotEmpty && passwordController.text.isNotEmpty;
+    final isActive =
+        emailController.text.isNotEmpty && passwordController.text.isNotEmpty;
     setState(() {
       isactive = isActive;
     });
@@ -41,8 +47,21 @@ class _LoginState extends State<Login> {
 
   @override
   Widget build(BuildContext context) {
+    login() {
+      final ap = Provider.of<AuthProvider>(context, listen: false);
+      LoginRequest loginRequest = LoginRequest(
+          email: emailController.text, password: passwordController.text);
+      var result = ap.loginProvider(loginRequest, context);
+      return result;
+    }
+
+    checkConnectivity() {
+      commonMethods.checkConnectivity(context);
+      login();
+    }
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Color.fromRGBO(248, 250, 252, 1),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -58,8 +77,15 @@ class _LoginState extends State<Login> {
                 ),
               ),
               Align(
-                alignment: Alignment.center,
-                child: TitleText(data: 'Connectez-vous à votre compte', color: Colors.black, size: 16, weight: FontWeight.normal, maxLines: 1, overflow: TextOverflow.clip, fontFamily: 'Inter')),
+                  alignment: Alignment.center,
+                  child: TitleText(
+                      data: 'Connectez-vous à votre compte',
+                      color: Colors.black,
+                      size: 16,
+                      weight: FontWeight.normal,
+                      maxLines: 1,
+                      overflow: TextOverflow.clip,
+                      fontFamily: 'Inter')),
               SizedBox(
                 height: 60,
               ),
@@ -107,38 +133,39 @@ class _LoginState extends State<Login> {
                 fontFamily: 'Inter',
               ),
               SizedBox(
-                height: 50,
-                child: TextFormField(
-                controller: passwordController,
-                onChanged: (value) {
-                  updateActiveState();
-                },
-                decoration: InputDecoration(
-                // labelText: "Password",
-                  fillColor: Colors.grey,
-                  focusColor: Colors.grey,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(
-                      width: 3.0,
-                    ),
-                  ),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                      color: Colors.grey,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        isPasswordVisible = !isPasswordVisible;
-                      });
+                  height: 50,
+                  child: TextFormField(
+                    controller: passwordController,
+                    onChanged: (value) {
+                      updateActiveState();
                     },
-                  ),
-                ),
-                obscureText: !isPasswordVisible,
-                keyboardType: TextInputType.visiblePassword,
-              )
-              ),
+                    decoration: InputDecoration(
+                      // labelText: "Password",
+                      fillColor: Colors.grey,
+                      focusColor: Colors.grey,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          width: 3.0,
+                        ),
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          isPasswordVisible
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: Colors.grey,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            isPasswordVisible = !isPasswordVisible;
+                          });
+                        },
+                      ),
+                    ),
+                    obscureText: !isPasswordVisible,
+                    keyboardType: TextInputType.visiblePassword,
+                  )),
               TextButton(
                 onPressed: () {
                   // Handle the action when the user presses "Forgot password"
@@ -215,7 +242,12 @@ class _LoginState extends State<Login> {
                       fontFamily: 'Inter',
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => Register()));
+                      },
                       child: Text('Sign up'),
                     ),
                   ],
@@ -225,9 +257,13 @@ class _LoginState extends State<Login> {
                 height: 50,
               ),
               ElevatedButton(
-                onPressed: isactive ? () {} : null,
+                onPressed: isactive
+                    ? () {
+                        checkConnectivity();
+                      }
+                    : null,
                 style: ElevatedButton.styleFrom(
-                  onSurface: AppColors.myColor,
+                 // onSurface: AppColors.myColor,
                   backgroundColor: AppColors.myColor,
                 ),
                 child: Container(

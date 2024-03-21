@@ -1,7 +1,13 @@
+import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:provider/provider.dart';
 import 'package:wholeorderclient/global/colors.dart';
+import 'package:wholeorderclient/methods/common_methods.dart';
+import 'package:wholeorderclient/models/requests/info_entreprise.dart';
+import 'package:wholeorderclient/models/response/categories_entreprise.dart';
+import 'package:wholeorderclient/providers/auth_provider.dart';
 import 'package:wholeorderclient/utils/title.dart';
 import 'package:dropdown_cupertino/dropdown_cupertino.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
@@ -18,20 +24,24 @@ class _EntrepriseInfo extends State<EntrepriseInfo> {
     'pomme',
     'banane',
   ];
+  List<String> selectedValues = []; // List of selected category names
+  
 
   String? selectedValue;
-  List<String> selectedValues = [];
   final _formKey = GlobalKey<FormState>();
   String phoneNumber = "";
   String countryCode = "";
+  String countryName = "";
   String number = "";
+  int categorieId = 0;
 
+  List<DataCategoriesEntreprise?> categories = [];
   late TextEditingController nomcommercialController;
   late TextEditingController nomentrepriseController;
   late TextEditingController prenomController;
   late TextEditingController nomController;
   late TextEditingController addressController;
-
+  final CommonMethods commonMethods = CommonMethods();
   bool isactive = false;
   bool isnomentrepriseVisible = false;
 
@@ -48,6 +58,8 @@ class _EntrepriseInfo extends State<EntrepriseInfo> {
     nomcommercialController.addListener(updateActiveState);
     nomentrepriseController.addListener(updateActiveState);
     addressController.addListener(updateActiveState);
+    fetchCategories();
+    final app = Provider.of<AuthProvider>(context, listen: false);
   }
 
   @override
@@ -70,9 +82,58 @@ class _EntrepriseInfo extends State<EntrepriseInfo> {
     });
   }
 
+  void fetchCategories() {
+    final app = Provider.of<AuthProvider>(context, listen: false);
+    app.categoriesEntrepriseProvider(context).then((value) {
+      setState(() {
+        categories = value ?? [];
+      });
+
+      print('List of categories:');
+      for (DataCategoriesEntreprise? category in categories) {
+        if (category != null) {
+          print('Category ID: ${category.id}');
+          print('Category Name: ${category.entreprisecategorie}');
+          print('Created At: ${category.createdat}');
+          print('Updated At: ${category.updatedat}');
+          print('---------------------------');
+        }
+      }
+    });
+  }
+
+  registerentrepriseinfo() {
+    final ap = Provider.of<AuthProvider>(context, listen: false);
+    var iduser = ap.getId;
+    var role = ap.getRole;
+    EntrepriseInfoRequest entrepriseInfoRequest = EntrepriseInfoRequest(
+        nomCommercial: nomcommercialController.text,
+        nomEntreprise: nomentrepriseController.text,
+        idUser: iduser,
+        idEntrepriseCategorie: categorieId,
+        codePays: countryCode,
+        telephone: phoneNumber,
+        adresse: addressController.text,
+        pays: countryName);
+
+    var result = ap.EntrepriseInfoProvider(entrepriseInfoRequest, context);
+    print('iduser : ----- ${iduser}');
+    print('roleuser : ----- ${role}');
+
+    print(EntrepriseInfoRequest);
+
+    return result;
+  }
+
+  checkConnectivity() {
+    commonMethods.checkConnectivity(context);
+    registerentrepriseinfo();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color.fromRGBO(248, 250, 252, 1),
       body: SafeArea(
           child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -83,19 +144,19 @@ class _EntrepriseInfo extends State<EntrepriseInfo> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 GestureDetector(
-                  onTap: () {},
-                  child: Container(
-                    width: 45,
-                    height: 45,
-                    decoration: BoxDecoration(
-                        color: AppColors.backbutton,
-                        borderRadius: BorderRadius.circular(8)),
-                    child: Center(
-                        child: Icon(
-                      Icons.arrow_back,
-                      color: AppColors.myColor,
+                    onTap: () {},
+                    child: Container(
+                      width: 45,
+                      height: 45,
+                      decoration: BoxDecoration(
+                          color: AppColors.backbutton,
+                          borderRadius: BorderRadius.circular(8)),
+                      child: Center(
+                          child: Icon(
+                        Icons.arrow_back,
+                        color: AppColors.myColor,
+                      )),
                     )),
-                  )),
               ],
             ),
             Align(
@@ -109,7 +170,7 @@ class _EntrepriseInfo extends State<EntrepriseInfo> {
             Align(
               alignment: Alignment.center,
               child: TitleText(
-                data: 'Information du fournisseur',
+                data: 'Information de L entreprise',
                 color: Colors.black,
                 size: 16,
                 weight: FontWeight.normal,
@@ -197,80 +258,161 @@ class _EntrepriseInfo extends State<EntrepriseInfo> {
               overflow: TextOverflow.clip,
               fontFamily: 'Inter',
             ),
-            DropdownButtonFormField2<List<String>>(
-              isExpanded: true,
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              hint: selectedValues.isEmpty
-                  ? Text(
-                      'Select Your categories',
-                      style: TextStyle(fontSize: 14),
-                    )
-                  : Text(
-                      selectedValues.toString(),
-                      style: TextStyle(fontSize: 14),
-                    ),
-              items: genderItems
-                  .map((item) => DropdownMenuItem<List<String>>(
-                        value: [item],
-                        child: CheckboxListTile(
-                          title: Text(
-                            item,
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                          value: selectedValues.contains(item),
-                          onChanged: (value) {
-                            setState(() {
-                              if (value!) {
-                                if (!selectedValues.contains(item)) {
-                                  // Check if the item is not already selected
-                                  selectedValues.add(item);
-                                  print(selectedValues);
-                                }
-                              } else {
-                                selectedValues.remove(item);
-                              }
-                            });
-                          },
-                        ),
-                      ))
-                  .toList(),
-              validator: (value) {
-                if (value == null) {
-                  return 'Please select gender.';
-                }
-                return null;
-              },
-              onChanged: (value) {},
-              onSaved: (value) {
-                selectedValue = value.toString();
-              },
-              buttonStyleData: const ButtonStyleData(
-                padding: EdgeInsets.only(right: 8),
-              ),
-              iconStyleData: const IconStyleData(
-                icon: Icon(
-                  Icons.arrow_drop_down,
-                  color: Colors.black45,
-                ),
-                iconSize: 24,
-              ),
-              dropdownStyleData: DropdownStyleData(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-              ),
-              menuItemStyleData: const MenuItemStyleData(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-              ),
+            DropdownButtonFormField<String>(
+  isExpanded: true,
+  decoration: InputDecoration(
+    contentPadding: const EdgeInsets.symmetric(vertical: 16),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+    ),
+  ),
+  hint: selectedValue == null
+      ? Text(
+          'Select Your category',
+          style: TextStyle(fontSize: 14),
+        )
+      : Text(
+          selectedValue!,
+          style: TextStyle(fontSize: 14),
+        ),
+  value: selectedValue,
+  items: categories
+      .map((item) => DropdownMenuItem<String>(
+            value: item!.entreprisecategorie, // Store the category name as a string
+            child: ListTile(
+              title: Text(item.entreprisecategorie!),
             ),
+          ))
+      .toList(),
+  onChanged: (value) {
+    setState(() {
+      selectedValue = value; // Update the selectedValue when a new value is chosen
+      // Do something with the selected value if needed
+      // For example, you can find the corresponding DataCategoriesEntreprise object
+      final selectedItemObject = categories.firstWhere(
+        (item) => item!.entreprisecategorie == value,
+        // No need for orElse here as we're sure the item exists
+      );
+      // If the item is found, print its ID
+      if (selectedItemObject != null) {
+        print("Selected item ID for $value: ${selectedItemObject.id}");
+        categorieId = selectedItemObject.id!;
+      }
+    });
+  },
+  validator: (value) {
+    if (value == null || value.isEmpty) {
+      return 'Please select a category.';
+    }
+    return null;
+  },
+  style: TextStyle(
+    // Define the text style for the dropdown button
+    fontSize: 14,
+    color: Colors.black,
+  ),
+  icon: Icon(
+    Icons.arrow_drop_down,
+    color: Colors.black45,
+    size: 24,
+  ),
+  dropdownColor: Colors.white, // Customize the dropdown background color if needed
+),
 
-           
-            SizedBox(
+             /*  DropdownButtonFormField2<List<String>>(
+                isExpanded: true,
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                hint: selectedValues.isEmpty
+                    ? Text(
+                        'Select Your categories',
+                        style: TextStyle(fontSize: 14),
+                      )
+                    : Text(
+                        selectedValues.toString(),
+                        style: TextStyle(fontSize: 14),
+                      ),
+                items: categories
+                    .map((item) => DropdownMenuItem<List<String>>(
+                          value: [
+                            item!.entreprisecategorie!
+                          ], // Store the category name as a string
+                          child: ListTile(
+                            title: Text(item.entreprisecategorie!),
+                            leading: Checkbox(
+                              value: selectedValues
+                                  .contains(item.entreprisecategorie!),
+                              onChanged: (value) {
+                                setState(() {
+                                  if (value!) {
+                                    selectedValues.add(item.entreprisecategorie!);
+                                  } else {
+                                    selectedValues
+                                        .remove(item.entreprisecategorie!);
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+                        ))
+                    .toList(),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please select at least one category.';
+                  }
+                  return null;
+                },
+                onChanged: (value) {
+                  /// Do something when the value changes
+                  // Do something when the value changes
+                  if (value != null && categories != null) {
+                    // Find the corresponding DataCategoriesEntreprise object for each selected category name
+                    for (var categoryName in value) {
+                      // Find the corresponding DataCategoriesEntreprise object
+                      final selectedItemObject = categories.firstWhere(
+                        (item) => item!.entreprisecategorie == categoryName,
+                        // No need for orElse here as we're sure the item exists
+                      );
+
+                      // If the item is found, print its ID
+                      if (selectedItemObject != null) {
+                        print(
+                            "Selected item ID for $categoryName: ${selectedItemObject.id}");
+                        setState(() {
+                          categorieId = selectedItemObject!.id!;
+                        });
+                      }
+                    }
+                  }
+                },
+                onSaved: (value) {
+                  // Save the selected value
+                  selectedValues = value!;
+                },
+                buttonStyleData: ButtonStyleData(
+                  padding: EdgeInsets.only(right: 8),
+                ),
+                iconStyleData: IconStyleData(
+                  icon: Icon(
+                    Icons.arrow_drop_down,
+                    color: Colors.black45,
+                  ),
+                  iconSize: 24,
+                ),
+                dropdownStyleData: DropdownStyleData(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                ),
+                menuItemStyleData: MenuItemStyleData(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                ),
+              ),
+               */SizedBox(
               height: 20,
             ),
             Container(
@@ -342,65 +484,85 @@ class _EntrepriseInfo extends State<EntrepriseInfo> {
               overflow: TextOverflow.clip,
               fontFamily: 'Inter',
             ),
-            DropdownButtonFormField2<String>(
-              isExpanded: true,
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+            Container(
+              height: 50,
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  // primary: Colors.white,
+                  //onPrimary: Colors.grey,
+                  elevation: 0,
+                  backgroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                    side: BorderSide(color: Colors.grey),
+                  ),
                 ),
-              ),
-              hint: const Text(
-                'Select Your Gender',
-                style: TextStyle(fontSize: 14),
-              ),
-              items: genderItems
-                  .map((item) => DropdownMenuItem<String>(
-                        value: item,
-                        child: Text(
-                          item,
-                          style: const TextStyle(
-                            fontSize: 14,
-                          ),
-                        ),
-                      ))
-                  .toList(),
-              validator: (value) {
-                if (value == null) {
-                  return 'Please select gender.';
-                }
-                return null;
-              },
-              onChanged: (value) {},
-              onSaved: (value) {
-                selectedValue = value.toString();
-              },
-              buttonStyleData: const ButtonStyleData(
-                padding: EdgeInsets.only(right: 8),
-              ),
-              iconStyleData: const IconStyleData(
-                icon: Icon(
-                  Icons.arrow_drop_down,
-                  color: Colors.black45,
+                onPressed: () {
+                  showCountryPicker(
+                    context: context,
+                    //Optional.  Can be used to exclude(remove) one or more countries from the countries list (optional).
+                    exclude: <String>['KN', 'MF'],
+                    favorite: <String>['SN'],
+                    //Optional. Shows phone code before the country name.
+                    showPhoneCode: true,
+                    onSelect: (Country country) {
+                      print('Select country: ${country.name}');
+                      setState(() {
+                        countryName = country.name;
+                      });
+                    },
+                    // Optional. Sets the theme for the country list picker.
+                    countryListTheme: CountryListThemeData(
+                      // Optional. Sets the border radius for the bottom sheet.
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(40.0),
+                        topRight: Radius.circular(40.0),
+                      ),
+                      // Optional. Styles the search field.
+                      inputDecoration: InputDecoration(
+                        labelText: 'Search',
+                        hintText: 'Start typing to search',
+                        prefixIcon: const Icon(Icons.search),
+                      ),
+                      // Optional. Styles the text in the search field
+                      searchTextStyle: TextStyle(
+                        color: AppColors.myColor,
+                        fontSize: 18,
+                      ),
+                    ),
+                  );
+                },
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TitleText(
+                        data: "Pays",
+                        color: Colors.black,
+                        size: 12,
+                        weight: FontWeight.normal,
+                        maxLines: 1,
+                        overflow: TextOverflow.clip,
+                        fontFamily: 'Inter',
+                      ),
+                    ],
+                  ),
                 ),
-                iconSize: 24,
-              ),
-              dropdownStyleData: DropdownStyleData(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-              ),
-              menuItemStyleData: const MenuItemStyleData(
-                padding: EdgeInsets.symmetric(horizontal: 16),
               ),
             ),
             SizedBox(
               height: 20,
             ),
             ElevatedButton(
-              onPressed: isactive ? () {} : null,
+              onPressed: isactive
+                  ? () {
+                      checkConnectivity();
+                    }
+                  : null,
               style: ElevatedButton.styleFrom(
-                onSurface: AppColors.myColor,
+                //onSurface: AppColors.myColor,
                 backgroundColor: AppColors.myColor,
               ),
               child: Container(

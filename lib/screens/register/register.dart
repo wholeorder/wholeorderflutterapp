@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:wholeorderclient/global/colors.dart';
+import 'package:wholeorderclient/methods/common_methods.dart';
+import 'package:wholeorderclient/models/requests/register_request.dart';
+import 'package:wholeorderclient/providers/auth_provider.dart';
 import 'package:wholeorderclient/screens/register/entreprise_info.dart';
+import 'package:wholeorderclient/screens/register/fournisseur_info.dart';
 import 'package:wholeorderclient/utils/title.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
-
+import 'package:wholeorderclient/utils/enum.dart' as Enums; // I
 
 class Register extends StatefulWidget {
   const Register({Key? key}) : super(key: key);
@@ -15,6 +20,8 @@ class Register extends StatefulWidget {
 
 class _RegisterState extends State<Register> {
   Type _selectedSegment = Type.entreprise;
+  late int role; // Default role is entreprise
+  final CommonMethods commonMethods = CommonMethods();
 
   late TextEditingController emailController;
   late TextEditingController passwordController;
@@ -26,6 +33,7 @@ class _RegisterState extends State<Register> {
   @override
   void initState() {
     super.initState();
+    role = 2;
     emailController = TextEditingController();
     passwordController = TextEditingController();
     prenomController = TextEditingController();
@@ -44,15 +52,53 @@ class _RegisterState extends State<Register> {
   }
 
   void updateActiveState() {
-    final isActive = emailController.text.isNotEmpty && passwordController.text.isNotEmpty && 
-        prenomController.text.isNotEmpty && nomController.text.isNotEmpty;
+    final isActive = emailController.text.isNotEmpty &&
+        passwordController.text.isNotEmpty &&
+        prenomController.text.isNotEmpty &&
+        nomController.text.isNotEmpty;
     setState(() {
       isactive = isActive;
     });
   }
 
+  
+
   @override
   Widget build(BuildContext context) {
+    register() {
+      final ap = Provider.of<AuthProvider>(context, listen: false);
+      RegisterRequest registerRequest = RegisterRequest(
+          name: nomController.text.trim(),
+          firstname: prenomController.text.trim(),
+          email: emailController.text.trim(),
+          role: role,
+          password: passwordController.text.trim());
+
+      var result = ap.registerProvider(registerRequest, context);
+      print(registerRequest.role);
+      print(_selectedSegment);
+
+      return result;
+    }
+
+    checkConnectivity() {
+      commonMethods.checkConnectivity(context);
+      register();
+      /* if (_selectedSegment == Type.entreprise) {
+        register();
+        /* Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => EntrepriseInfo()),
+        ); */
+      } else {
+        register();
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => FournisseurInfo()),
+        );
+      } */
+    }
+
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
     return Scaffold(
@@ -92,6 +138,13 @@ class _RegisterState extends State<Register> {
                   if (value != null) {
                     setState(() {
                       _selectedSegment = value;
+                      print('selected seg ${value}');
+                      if (value == Type.fournisseur) {
+                        role = 1;
+                      } else {
+                        role = 2;
+                      }
+                      // role = _selectedSegment == Type.fournisseur ? 1 : 2;
                     });
                   }
                 },
@@ -112,284 +165,9 @@ class _RegisterState extends State<Register> {
                   ),
                 },
               ),
+
               SizedBox(height: 20), // Adjusted height to provide spacing
               if (_selectedSegment == Type.entreprise)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment
-                      .start, // Ensure children align to the start
-                  children: [
-                    Row(
-                       mainAxisAlignment:  MainAxisAlignment.spaceBetween,
-                     // crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Container(
-                          height: 80,
-                          //width: width/2-20,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              TitleText(
-                                data: "Prenom",
-                                color: Colors.black,
-                                size: 14,
-                                weight: FontWeight.normal,
-                                maxLines: 1,
-                                overflow: TextOverflow.clip,
-                                fontFamily: 'Inter',
-                              ),
-                              SizedBox(
-                                height: 40,
-                                width: 150,
-                                child: TextField(
-                                  controller: prenomController,
-                                  onChanged: (value) {
-                                    updateActiveState();
-                                  },
-                                  decoration: InputDecoration(
-                                    hintText: 'Prenom',
-                                    labelStyle:
-                                        TextStyle(color: Colors.black38),
-                                    fillColor: Colors.grey.shade100,
-                                    focusColor: Colors.grey,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(4),
-                                      borderSide: BorderSide(
-                                        width: 3.0,color: Colors.grey.shade200
-                                      ),
-                                    ),
-                                  ),
-                                  keyboardType: TextInputType.name,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          height: 80,
-                         // width:  width / 2 - 20,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              TitleText(
-                                data: "Nom",
-                                color: Colors.black,
-                                size: 14,
-                                weight: FontWeight.normal,
-                                maxLines: 1,
-                                overflow: TextOverflow.clip,
-                                fontFamily: 'Inter',
-                              ),
-                              SizedBox(
-                                height: 40,
-                                width: 150,
-                                child: TextField(
-                                  controller: nomController,
-                                  onChanged: (value) {
-                                    updateActiveState();
-                                  },
-                                  decoration: InputDecoration(
-                                    hintText: 'Nom',
-                                    labelStyle:
-                                        TextStyle(color: Colors.black38),
-                                    fillColor: Colors.grey.shade100,
-                                    focusColor: Colors.grey,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(4),
-                                      borderSide: BorderSide(
-                                        width: 3.0,color: Colors.grey.shade200
-                                      ),
-                                    ),
-                                  ),
-                                  keyboardType: TextInputType.name,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      ],
-                    ),
-                    SizedBox(
-                      height: 10,
-                    ),
-                    TitleText(
-                      data: "Email",
-                      color: Colors.black,
-                      size: 16,
-                      weight: FontWeight.normal,
-                      maxLines: 1,
-                      overflow: TextOverflow.clip,
-                      fontFamily: 'Inter',
-                    ),
-                    SizedBox(
-                      height: 50,
-                      child: TextField(
-                        controller: emailController,
-                        onChanged: (value) {
-                          updateActiveState();
-                        },
-                        decoration: InputDecoration(
-                          hintText: 'Entrer votre email',
-                          labelStyle: TextStyle(color: Colors.black38),
-                          fillColor: Colors.grey.shade100,
-                          focusColor: Colors.grey,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(
-                              width: 3.0,color: Colors.grey.shade200
-                            ),
-                          ),
-                        ),
-                        keyboardType: TextInputType.emailAddress,
-                      ),
-                    ),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    TitleText(
-                      data: "Password",
-                      color: Colors.black,
-                      size: 16,
-                      weight: FontWeight.normal,
-                      maxLines: 1,
-                      overflow: TextOverflow.clip,
-                      fontFamily: 'Inter',
-                    ),
-                    SizedBox(
-                        height: 50,
-                        child: TextFormField(
-                          controller: passwordController,
-                          onChanged: (value) {
-                            updateActiveState();
-                          },
-                          decoration: InputDecoration(
-                            // labelText: "Password",
-                            hintText: 'Entrer le mot de passe',
-                            fillColor: Colors.grey.shade100,
-                            focusColor: Colors.grey,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                width: 3.0,color: Colors.grey.shade200
-                              ),
-                            ),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                isPasswordVisible
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
-                                color: Colors.grey,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  isPasswordVisible = !isPasswordVisible;
-                                });
-                              },
-                            ),
-                          ),
-                          obscureText: !isPasswordVisible,
-                          keyboardType: TextInputType.visiblePassword,
-                        )
-                      ),
-                       SizedBox(
-                      height: 20,
-                    ),
-                    Center(
-                      child: Row(
-                        children: [
-                          greyLine(38),
-                          Padding(padding: EdgeInsets.only(right: 2)),
-                          Text(
-                            ' Or',
-                            style: TextStyle(color: Color(0xFFD9D9D9)),
-                            textAlign: TextAlign.center,
-                          ),
-                          greyLine(14),
-                        ],
-                      ),
-                    ),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    GestureDetector(
-                      onTap: () {},
-                      child: Container(
-                        color: Color.fromARGB(249, 245, 243, 243),
-                        height: 48,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            Image.asset(
-                              'images/googleLogo.png',
-                              width: 20,
-                            ),
-                            TitleText(
-                              data: 'Sign in with Google',
-                              color: Colors.black,
-                              size: 16,
-                              weight: FontWeight.normal,
-                              maxLines: 1,
-                              overflow: TextOverflow.clip,
-                              fontFamily: 'Inter',
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 40,
-                    ),
-                    Align(
-                      alignment: Alignment.center,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          TitleText(
-                            data: 'Don\'t have an account?',
-                            color: Colors.black,
-                            size: 12,
-                            weight: FontWeight.normal,
-                            maxLines: 1,
-                            overflow: TextOverflow.clip,
-                            fontFamily: 'Inter',
-                          ),
-                          TextButton(
-                            onPressed: () {},
-                            child: Text('Sign up'),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(
-                      height: 40,
-                    ),
-                    ElevatedButton(
-                      onPressed: isactive 
-                      ? () {
-                       Navigator.push(context, MaterialPageRoute(builder: (context)=> EntrepriseInfo()));
-                      } 
-                      : null,
-                      style: ElevatedButton.styleFrom(
-                        onSurface: AppColors.myColor,
-                        backgroundColor: AppColors.myColor,
-                      ),
-                      child: Container(
-                        width: 400,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'S inscrire',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ),
-                    ),
-                   ],
-                ),
-              if (_selectedSegment == Type.fournisseur)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment
                       .start, // Ensure children align to the start
@@ -430,8 +208,8 @@ class _RegisterState extends State<Register> {
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(4),
                                       borderSide: BorderSide(
-                                        width: 3.0,color: Colors.grey.shade100
-                                      ),
+                                          width: 3.0,
+                                          color: Colors.grey.shade200),
                                     ),
                                   ),
                                   keyboardType: TextInputType.name,
@@ -472,8 +250,8 @@ class _RegisterState extends State<Register> {
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(4),
                                       borderSide: BorderSide(
-                                        width: 3.0,color: Colors.grey.shade200
-                                      ),
+                                          width: 3.0,
+                                          color: Colors.grey.shade200),
                                     ),
                                   ),
                                   keyboardType: TextInputType.name,
@@ -511,8 +289,7 @@ class _RegisterState extends State<Register> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide(
-                              width: 3.0,color: Colors.grey.shade200
-                            ),
+                                width: 3.0, color: Colors.grey.shade200),
                           ),
                         ),
                         keyboardType: TextInputType.emailAddress,
@@ -522,7 +299,7 @@ class _RegisterState extends State<Register> {
                       height: 20,
                     ),
                     TitleText(
-                      data: "Passwor",
+                      data: "Password",
                       color: Colors.black,
                       size: 16,
                       weight: FontWeight.normal,
@@ -545,8 +322,7 @@ class _RegisterState extends State<Register> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                               borderSide: BorderSide(
-                                width: 3.0,color: Colors.grey.shade200
-                              ),
+                                  width: 3.0, color: Colors.grey.shade200),
                             ),
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -639,9 +415,13 @@ class _RegisterState extends State<Register> {
                       height: 40,
                     ),
                     ElevatedButton(
-                      onPressed: isactive ? () {} : null,
+                      onPressed: isactive
+                          ? () {
+                              checkConnectivity();
+                            }
+                          : null,
                       style: ElevatedButton.styleFrom(
-                        onSurface: AppColors.myColor,
+                        // onSurface: AppColors.myColor,
                         backgroundColor: AppColors.myColor,
                       ),
                       child: Container(
@@ -660,14 +440,286 @@ class _RegisterState extends State<Register> {
                     ),
                   ],
                 ),
-             
+              if (_selectedSegment == Type.fournisseur)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment
+                      .start, // Ensure children align to the start
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      // crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Container(
+                          height: 80,
+                          //width: width/2-20,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              TitleText(
+                                data: "Prenom",
+                                color: Colors.black,
+                                size: 14,
+                                weight: FontWeight.normal,
+                                maxLines: 1,
+                                overflow: TextOverflow.clip,
+                                fontFamily: 'Inter',
+                              ),
+                              SizedBox(
+                                height: 40,
+                                width: 150,
+                                child: TextField(
+                                  controller: prenomController,
+                                  onChanged: (value) {
+                                    updateActiveState();
+                                  },
+                                  decoration: InputDecoration(
+                                    hintText: 'Prenom',
+                                    labelStyle:
+                                        TextStyle(color: Colors.black38),
+                                    fillColor: Colors.grey.shade100,
+                                    focusColor: Colors.grey,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(4),
+                                      borderSide: BorderSide(
+                                          width: 3.0,
+                                          color: Colors.grey.shade100),
+                                    ),
+                                  ),
+                                  keyboardType: TextInputType.name,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          height: 80,
+                          // width:  width / 2 - 20,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              TitleText(
+                                data: "Nom",
+                                color: Colors.black,
+                                size: 14,
+                                weight: FontWeight.normal,
+                                maxLines: 1,
+                                overflow: TextOverflow.clip,
+                                fontFamily: 'Inter',
+                              ),
+                              SizedBox(
+                                height: 40,
+                                width: 150,
+                                child: TextField(
+                                  controller: nomController,
+                                  onChanged: (value) {
+                                    updateActiveState();
+                                  },
+                                  decoration: InputDecoration(
+                                    hintText: 'Nom',
+                                    labelStyle:
+                                        TextStyle(color: Colors.black38),
+                                    fillColor: Colors.grey.shade100,
+                                    focusColor: Colors.grey,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(4),
+                                      borderSide: BorderSide(
+                                          width: 3.0,
+                                          color: Colors.grey.shade200),
+                                    ),
+                                  ),
+                                  keyboardType: TextInputType.name,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    TitleText(
+                      data: "Email",
+                      color: Colors.black,
+                      size: 16,
+                      weight: FontWeight.normal,
+                      maxLines: 1,
+                      overflow: TextOverflow.clip,
+                      fontFamily: 'Inter',
+                    ),
+                    SizedBox(
+                      height: 50,
+                      child: TextField(
+                        controller: emailController,
+                        onChanged: (value) {
+                          updateActiveState();
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Entrer votre email',
+                          labelStyle: TextStyle(color: Colors.black38),
+                          fillColor: Colors.grey.shade100,
+                          focusColor: Colors.grey,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                                width: 3.0, color: Colors.grey.shade200),
+                          ),
+                        ),
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                    ),
+                    SizedBox(
+                      height: 20,
+                    ),
+                    TitleText(
+                      data: "Password",
+                      color: Colors.black,
+                      size: 16,
+                      weight: FontWeight.normal,
+                      maxLines: 1,
+                      overflow: TextOverflow.clip,
+                      fontFamily: 'Inter',
+                    ),
+                    SizedBox(
+                        height: 50,
+                        child: TextFormField(
+                          controller: passwordController,
+                          onChanged: (value) {
+                            updateActiveState();
+                          },
+                          decoration: InputDecoration(
+                            // labelText: "Password",
+                            hintText: 'Entrer le mot de passe',
+                            fillColor: Colors.grey.shade100,
+                            focusColor: Colors.grey,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                  width: 3.0, color: Colors.grey.shade200),
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                isPasswordVisible
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                color: Colors.grey,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  isPasswordVisible = !isPasswordVisible;
+                                });
+                              },
+                            ),
+                          ),
+                          obscureText: !isPasswordVisible,
+                          keyboardType: TextInputType.visiblePassword,
+                        )),
+                    SizedBox(
+                      height: 20,
+                    ),
+                    Center(
+                      child: Row(
+                        children: [
+                          greyLine(38),
+                          Padding(padding: EdgeInsets.only(right: 2)),
+                          Text(
+                            ' Or',
+                            style: TextStyle(color: Color(0xFFD9D9D9)),
+                            textAlign: TextAlign.center,
+                          ),
+                          greyLine(14),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      height: 20,
+                    ),
+                    GestureDetector(
+                      onTap: () {},
+                      child: Container(
+                        color: Color.fromARGB(249, 245, 243, 243),
+                        height: 48,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Image.asset(
+                              'images/googleLogo.png',
+                              width: 20,
+                            ),
+                            TitleText(
+                              data: 'Sign in with Google',
+                              color: Colors.black,
+                              size: 16,
+                              weight: FontWeight.normal,
+                              maxLines: 1,
+                              overflow: TextOverflow.clip,
+                              fontFamily: 'Inter',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 40,
+                    ),
+                    Align(
+                      alignment: Alignment.center,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          TitleText(
+                            data: 'have an account?',
+                            color: Colors.black,
+                            size: 12,
+                            weight: FontWeight.normal,
+                            maxLines: 1,
+                            overflow: TextOverflow.clip,
+                            fontFamily: 'Inter',
+                          ),
+                          TextButton(
+                            onPressed: () {},
+                            child: Text('Sign in'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      height: 40,
+                    ),
+                    ElevatedButton(
+                      onPressed: isactive
+                          ? () {
+                              checkConnectivity();
+                            }
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        // onSurface: AppColors.myColor,
+                        backgroundColor: AppColors.myColor,
+                      ),
+                      child: Container(
+                        width: 400,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'S inscrire',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
             ],
           ),
         ),
       ),
     );
   }
-  
+
   Container greyLine(double valMargin) {
     return Container(
       width: 133,

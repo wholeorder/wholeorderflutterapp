@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wholeorderclient/global/colors.dart';
+import 'package:wholeorderclient/providers/auth_provider.dart';
 import 'package:wholeorderclient/providers/list_provider.dart';
 import 'package:wholeorderclient/screens/login/login.dart';
 import 'package:wholeorderclient/screens/password/new_password.dart';
@@ -13,12 +14,14 @@ import 'package:provider/provider.dart';
 
 
 void main() {
-  runApp(
+    runApp(const MyApp());
+
+  /* runApp(
     MultiProvider(
       providers: providerList,
       child: const MyApp(),
     ),
-  );
+  ); */
 }
 
 class MyApp extends StatelessWidget {
@@ -27,14 +30,16 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.myColor),
-        useMaterial3: true,
+   return MultiProvider(
+      providers: [
+        //ChangeNotifierProvider<AppProvider>(create: (_) => AppProvider()),
+        ChangeNotifierProvider<AuthProvider>(create: (_) => AuthProvider()),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        // ...
+        home: Register(),
       ),
-      debugShowCheckedModeBanner: false,
-      home: NewPassword(),
     );
   }
 }

@@ -1,11 +1,11 @@
-class LoginResponse {
+class LoginRequest {
   final String email;
   final String password;
 
-  LoginResponse({required this.email, required this.password});
+  LoginRequest({required this.email, required this.password});
 
-  factory LoginResponse.fromJson(Map<String, dynamic> json) {
-    return LoginResponse(
+  factory LoginRequest.fromJson(Map<String, dynamic> json) {
+    return LoginRequest(
       email : json['email'],
       password : json['password'],
     );

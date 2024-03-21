@@ -26,7 +26,7 @@ class CommonMethods {
 
 
   /* Function for alerts */
-  static Future<void> alertDialog(BuildContext context, Color color, Text text, Text text2, AssetImage assetImage) async {
+   Future<void> alertDialog(BuildContext context, Color color, Text text, Text text2, AssetImage assetImage) async {
   return showCupertinoDialog(
     context: context,
     builder: (BuildContext context) {

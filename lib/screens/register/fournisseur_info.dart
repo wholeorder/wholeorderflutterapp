@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:provider/provider.dart';
 import 'package:wholeorderclient/global/colors.dart';
+import 'package:wholeorderclient/models/requests/verifyotp_request.dart';
+import 'package:wholeorderclient/providers/auth_provider.dart';
 import 'package:wholeorderclient/utils/title.dart';
 import 'package:dropdown_cupertino/dropdown_cupertino.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
@@ -65,8 +68,8 @@ class _FournisseurInfo extends State<FournisseurInfo> {
   void updateActiveState() {
     final isActive = nomcommercialController.text.isNotEmpty &&
         nomentrepriseController.text.isNotEmpty &&
-       /*  selectedValues.isNotEmpty && */
-    addressController.text.isNotEmpty;
+        /*  selectedValues.isNotEmpty && */
+        addressController.text.isNotEmpty;
     setState(() {
       isactive = isActive;
     });
@@ -74,7 +77,11 @@ class _FournisseurInfo extends State<FournisseurInfo> {
 
   @override
   Widget build(BuildContext context) {
+
+     
+
     return Scaffold(
+      backgroundColor: Color.fromRGBO(248, 250, 252, 1),
       body: SafeArea(
           child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -216,7 +223,7 @@ class _FournisseurInfo extends State<FournisseurInfo> {
                       selectedValues.toString(),
                       style: TextStyle(fontSize: 14),
                     ),
-               items: genderItems
+              items: genderItems
                   .map((item) => DropdownMenuItem<List<String>>(
                         value: [item],
                         child: CheckboxListTile(
@@ -270,7 +277,7 @@ class _FournisseurInfo extends State<FournisseurInfo> {
                 padding: EdgeInsets.symmetric(horizontal: 16),
               ),
             ),
-           
+
             /*  DropdownButtonFormField<List<String>>(
       isExpanded: true,
       decoration: InputDecoration(
@@ -454,7 +461,7 @@ class _FournisseurInfo extends State<FournisseurInfo> {
             ElevatedButton(
               onPressed: isactive ? () {} : null,
               style: ElevatedButton.styleFrom(
-                onSurface: AppColors.myColor,
+                //onSurface: AppColors.myColor,
                 backgroundColor: AppColors.myColor,
               ),
               child: Container(

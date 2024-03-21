@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:provider/provider.dart';
 import 'package:wholeorderclient/global/colors.dart';
+import 'package:wholeorderclient/methods/common_methods.dart';
+import 'package:wholeorderclient/models/requests/verifyotp_request.dart';
+import 'package:wholeorderclient/providers/auth_provider.dart';
 import 'package:wholeorderclient/utils/title.dart';
+import 'package:pin_code_fields/pin_code_fields.dart';
 
 class Otp extends StatefulWidget {
   const Otp({super.key});
@@ -14,10 +19,29 @@ class _OtpState extends State<Otp> {
   String currentText = "";
   final formKey = GlobalKey<FormState>();
   bool isactive = false;
+  CommonMethods commonMethods = CommonMethods();
+  final TextEditingController otpController = TextEditingController();
+
 
   @override
   Widget build(BuildContext context) {
+    void verifyOtp() {
+      final app = Provider.of<AuthProvider>(context, listen: false);
+      VerifyOtpRequest verifyOtpRequest = VerifyOtpRequest(
+          email: app.getEmail, otp: otpController.text);
+      print('eamil :${app.getEmail}');
+      print(currentText);
+
+      var result = app.validationCodeProvider(verifyOtpRequest, context);
+    }
+
+    void checkConnection() {
+      commonMethods.checkConnectivity(context);
+      verifyOtp();
+    }
+
     return Scaffold(
+      backgroundColor: Color.fromRGBO(248, 250, 252, 1),
       body: SafeArea(
           child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -43,7 +67,9 @@ class _OtpState extends State<Otp> {
                     )),
               ],
             ),
-            SizedBox(height: 50,),
+            SizedBox(
+              height: 50,
+            ),
             TitleText(
               data: 'OTP Vérification',
               color: Colors.black,
@@ -53,8 +79,9 @@ class _OtpState extends State<Otp> {
               overflow: TextOverflow.clip,
               fontFamily: 'Inter',
             ),
-            
-            SizedBox(height: 10,),
+            SizedBox(
+              height: 10,
+            ),
             Align(
               alignment: Alignment.center,
               child: TitleText(
@@ -79,6 +106,36 @@ class _OtpState extends State<Otp> {
                   horizontal: 30,
                 ),
                 child: PinCodeTextField(
+                  controller: otpController ,
+                  appContext: context,
+                  length: 4,
+                  onCompleted: (value) {
+                    //authProvider.authMobileResponse!.codeAuto = value;
+                    // otpSaisitState.updateOtpSaisit(value);
+                    setState(() {
+                      currentText = value;
+                      isactive = true;
+                    });
+                  },
+                  //inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  pinTheme: PinTheme(
+                    shape: PinCodeFieldShape.box,
+                    selectedFillColor: Colors.teal,
+                    borderRadius: const BorderRadius.all(
+                      Radius.circular(10),
+                    ),
+                    activeColor: Colors.black,
+                    activeFillColor: Colors.grey,
+                    disabledColor: Colors.grey,
+                    inactiveColor: Colors.grey,
+                    inactiveFillColor: Colors.grey,
+                    fieldHeight: 48,
+                    fieldWidth: 48,
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+
+                /*  PinCodeTextField(
                   appContext: context,
                   pastedTextStyle: TextStyle(
                     color: Colors.white,
@@ -141,11 +198,10 @@ class _OtpState extends State<Otp> {
                   },
                   beforeTextPaste: (text) {
                     debugPrint("Allowing to paste $text");
-                    //if you return true then it will show the paste confirmation dialog. Otherwise if false, then nothing will happen.
-                    //but you can show anything you want here, like your pop up saying wrong paste format or etc
+                    
                     return true;
                   },
-                ),
+                ), */
               ),
             ),
             SizedBox(
@@ -154,8 +210,7 @@ class _OtpState extends State<Otp> {
             Align(
               alignment: Alignment.center,
               child: TitleText(
-                data:
-                    'Vous n avez pas recu le code',
+                data: 'Vous n avez pas recu le code',
                 color: Colors.black,
                 size: 12,
                 weight: FontWeight.normal,
@@ -177,11 +232,17 @@ class _OtpState extends State<Otp> {
                 fontFamily: 'Inter',
               ),
             )),
-            SizedBox(height: 20,),
+            SizedBox(
+              height: 20,
+            ),
             ElevatedButton(
-              onPressed: isactive ? () {} : null,
+              onPressed: isactive
+                  ? () {
+                      checkConnection();
+                    }
+                  : null,
               style: ElevatedButton.styleFrom(
-                onSurface: AppColors.myColor,
+               // onSurface: AppColors.myColor,
                 backgroundColor: AppColors.myColor,
               ),
               child: Container(
